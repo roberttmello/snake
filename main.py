@@ -1,116 +1,66 @@
+from sys import exit
 import pygame
-import random
-
 pygame.init()
-pygame.display.set_caption('SNAKE')
 
+# CORES DO JOGO
+PRETO = '#222222'
+BRANCO = '#FFEEDD'
+AMARELO = '#FFBB00'
+VERDE = '22FF22'
+
+
+# DIMENSOES DA TELA
 LARGURA_TELA, ALTURA_TELA = 1280, 720
+
+# CRIANDO A TELA PRINCIPAL
 tela = pygame.display.set_mode((LARGURA_TELA, ALTURA_TELA))
 
+# CRIANDO RELÓGIO PARA CONTROLAR O FPS
 relogio = pygame.time.Clock()
 
-# cores HEX
-preto = '#222222'
-branco = '#fafafa'
-verde = '#00dd00'
-amarelo = '#ffbb00'
-
-tamanho_quadrado_pixels = 20
+# VARIÁVEL QUE REPRESENTA o FPS do jogo
 velocidade_jogo = 15
 
-def gerar_comida():
-    comida_pos_x = round(random.randrange(0, LARGURA_TELA - tamanho_quadrado_pixels) / tamanho_quadrado_pixels) * tamanho_quadrado_pixels
-    comida_pos_y = round(random.randrange(0, ALTURA_TELA - tamanho_quadrado_pixels) / tamanho_quadrado_pixels) * tamanho_quadrado_pixels
-    return comida_pos_x, comida_pos_y
+fim_de_jogo = False
 
-
-def desenhar_comida(tamanho, x_pos, y_pos):
-    pygame.draw.rect(tela, amarelo, [x_pos, y_pos, tamanho, tamanho])
-
-
-def desenhar_cobra(tamanho, pixels):
-    for pixel in pixels:
-        pygame.draw.rect(tela, branco, [pixel[0], pixel[1], tamanho, tamanho])
-
-
-def desenhar_pontuacao(pontuacao):
-    fonte = pygame.font.Font('fonte/VT323-Regular.ttf', tamanho_quadrado_pixels * 2)
-    texto = fonte.render(f'Pontos: {pontuacao}', False, verde)
-    tela.blit(texto, (2,2))
-
-
-def selecionar_direcao(tecla):
-    if tecla == pygame.K_DOWN:
-        velocidade_x = 0
-        velocidade_y = tamanho_quadrado_pixels
-    elif tecla == pygame.K_UP:
-        velocidade_x = 0
-        velocidade_y = -tamanho_quadrado_pixels
-    elif tecla == pygame.K_RIGHT:
-        velocidade_x = tamanho_quadrado_pixels
-        velocidade_y = 0
-    elif tecla == pygame.K_LEFT:
-        velocidade_x = -tamanho_quadrado_pixels
-        velocidade_y = 0
-    return velocidade_x, velocidade_y
-
-
-def rodar_jogo():
-    fim_jogo = False
-    cobra_posicao_x = LARGURA_TELA / 2
-    cobra_posicao_y = ALTURA_TELA / 2
-    velocidade_cobra_x = 0
-    velocidade_cobra_y = 0
-    tamanho_inicial_cobra = 1
-    tamanho_pixels_cobra = []
-    comida_pos_x, comida_pos_y = gerar_comida()
-    deslocamento_cobra_x, deslocamento_cobra_y = 0, 0
+while True:
+    for evento in pygame.event.get():
+        if evento.type == pygame.QUIT:
+            exit()
+        elif evento.type == pygame.KEYDOWN:
+            if evento.key == pygame.K_ESCAPE:
+                fim_de_jogo = True
 
 
 
-    while not fim_jogo:
+    tela.fill(PRETO)
 
-        tela.fill(preto)
+    if not fim_de_jogo:
+        fonte_1 = pygame.font.Font('fonte/VT323-Regular.ttf', int(20 * LARGURA_TELA / 100))
+        fonte_2 = pygame.font.Font('fonte/VT323-Regular.ttf', int(5 * LARGURA_TELA / 100))
 
-        for evento in pygame.event.get():
-            if evento.type == pygame.QUIT:
-                fim_jogo = True
-            elif evento.type == pygame.KEYDOWN:
-                deslocamento_cobra_x, deslocamento_cobra_y = selecionar_direcao(evento.key)
+        nome_do_jogo = fonte_1.render('SNAKEpy', False, AMARELO)
+        nome_do_jogo_ret = nome_do_jogo.get_rect(center=(LARGURA_TELA / 2, int(30 * ALTURA_TELA / 100)))
 
-        # Desenhar comida
-        desenhar_comida(tamanho_quadrado_pixels, comida_pos_x, comida_pos_y)
+        mensagem = fonte_2.render("Pressione 'ESPAÇO' para começar", False, AMARELO)
+        mensagem_ret = mensagem.get_rect(center=(LARGURA_TELA / 2, int(60 * ALTURA_TELA / 100)))
 
-        # Atualizar a posicao da cobra
-        cobra_posicao_x += deslocamento_cobra_x
-        cobra_posicao_y += deslocamento_cobra_y
+        tela.blit(nome_do_jogo, nome_do_jogo_ret)
+        tela.blit(mensagem, mensagem_ret)
 
-        # Verificando colisão com as paredes
-        if cobra_posicao_x > LARGURA_TELA - tamanho_quadrado_pixels or cobra_posicao_x < 0:
-            fim_jogo = True
-        if cobra_posicao_y > ALTURA_TELA - tamanho_quadrado_pixels or cobra_posicao_y < 0:
-            fim_jogo = True
 
-        # Desenhar cobra
-        tamanho_pixels_cobra.append((cobra_posicao_x, cobra_posicao_y))
-        if len(tamanho_pixels_cobra) > tamanho_inicial_cobra:
-            del tamanho_pixels_cobra[0]
-        # Verificando colisao com o propio corpo
-        for pedaco_cobra in tamanho_pixels_cobra[:-1]:
-            if pedaco_cobra == (cobra_posicao_x, cobra_posicao_y):
-                fim_jogo = True
+    else:
+        fim_do_jogo = fonte_1.render('GAME OVER', False, AMARELO)
+        fim_do_jogo_ret = fim_do_jogo.get_rect(center=(LARGURA_TELA / 2, int(30 * ALTURA_TELA / 100)))
+        tela.blit(fim_do_jogo, fim_do_jogo_ret)
 
-        desenhar_cobra(tamanho_quadrado_pixels, tamanho_pixels_cobra)
-        desenhar_pontuacao(tamanho_inicial_cobra - 1)
+    pygame.display.flip()
+    relogio.tick(velocidade_jogo)
 
-        # Criar uma nova comida
-        if cobra_posicao_x == comida_pos_x and cobra_posicao_y == comida_pos_y:
-            tamanho_pixels_cobra.append((comida_pos_x, comida_pos_y))
-            desenhar_cobra(tamanho_quadrado_pixels, tamanho_pixels_cobra)
-            comida_pos_x, comida_pos_y = gerar_comida()
-            tamanho_inicial_cobra += 1
 
-        pygame.display.update()
-        relogio.tick(velocidade_jogo)
 
-rodar_jogo()
+pygame.quit()
+
+
+
+
